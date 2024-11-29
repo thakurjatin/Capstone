@@ -49,7 +49,7 @@ ________________________________________
 ________________________________________
 ## Authentication
 ### Auth0 Configuration
-    1.	Log in to Auth0.
+    1.	Log in to Auth0.(https://auth0.com/)
     2.	Create an application and configure the API audience.
     3.	Define roles:
     o	Assistant: Can view movies and actors.
