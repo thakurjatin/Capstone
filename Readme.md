@@ -3,21 +3,21 @@ The Casting Agency API is a backend system for a casting agency to manage movies
 ________________________________________
 ## Motivation
 The goal of this project is to provide a scalable backend API for managing movies and actors. It demonstrates:
-•	Implementation of Role-Based Access Control (RBAC) using Auth0.
-•	Secure access to endpoints with JWT authentication.
-•	Proper API design, error handling, and testing.
+    •	Implementation of Role-Based Access Control (RBAC) using Auth0.
+    •	Secure access to endpoints with JWT authentication.
+    •	Proper API design, error handling, and testing.
 ________________________________________
 ## Live API
-•	The API is hosted on Heroku/Render.
-•	Authentication is required to access the API. Follow the instructions in the Authentication section to configure JWTs.
+    •	The API is hosted on Heroku/Render.
+    •	Authentication is required to access the API. Follow the instructions in the Authentication section to configure JWTs.
 ________________________________________
 ## Setup and Installation
 ### Dependencies
-•	Python 3.8 or higher
-•	Flask
-•	PostgreSQL
-•	Auth0
-•	Required libraries (listed in requirements.txt)
+    •	Python 3.8 or higher
+    •	Flask
+    •	PostgreSQL
+    •	Auth0
+    •	Required libraries (listed in requirements.txt)
 
 ## Local Development
 1.	Clone the Repository
