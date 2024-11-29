@@ -1,146 +1,129 @@
-from flask import Flask, jsonify, request, abort
+from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
-from models import db, Movie, Actor
-from auth import requires_auth
+from flask_sqlalchemy import SQLAlchemy
+from auth import AuthError, requires_auth
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost:5432/casting_agency'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
 CORS(app)
 
-# Route to get all actors
-@app.route('/actors', methods=['GET'])
-@requires_auth('get:actors')
-def get_actors(payload):
-    actors = Actor.query.all()
-    return jsonify({
-        'success': True,
-        'actors': [actor.format() for actor in actors]
-    })
+# Database Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost:5432/moviesdb'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# Route to get all movies
+# Models
+class Movie(db.Model):
+    __tablename__ = 'movies'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String, nullable=False)
+    release_date = db.Column(db.Date, nullable=False)
+
+    def format(self):
+        return {"id": self.id, "title": self.title, "release_date": self.release_date.isoformat()}
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+
+class Actor(db.Model):
+    __tablename__ = 'actors'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    gender = db.Column(db.String, nullable=False)
+
+    def format(self):
+        return {"id": self.id, "name": self.name, "age": self.age, "gender": self.gender}
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+# Routes
 @app.route('/movies', methods=['GET'])
 @requires_auth('get:movies')
-def get_movies(payload):
+def get_movies(jwt):
     movies = Movie.query.all()
-    return jsonify({
-        'success': True,
-        'movies': [movie.format() for movie in movies]
-    })
+    return jsonify({"success": True, "movies": [movie.format() for movie in movies]}), 200
 
-# Route to create a new actor
-@app.route('/actors', methods=['POST'])
-@requires_auth('post:actors')
-def create_actor(payload):
-    body = request.get_json()
-    try:
-        new_actor = Actor(
-            name=body['name'],
-            age=body['age'],
-            gender=body['gender']
-        )
-        new_actor.insert()
-        return jsonify({
-            'success': True,
-            'actor': new_actor.format()
-        })
-    except Exception as e:
-        abort(400)
 
-# Route to create a new movie
+@app.route('/actors', methods=['GET'])
+@requires_auth('get:actors')
+def get_actors(jwt):
+    actors = Actor.query.all()
+    return jsonify({"success": True, "actors": [actor.format() for actor in actors]}), 200
+
+
 @app.route('/movies', methods=['POST'])
 @requires_auth('post:movies')
-def create_movie(payload):
-    body = request.get_json()
-    try:
-        new_movie = Movie(
-            title=body['title'],
-            release_date=body['release_date']
-        )
-        new_movie.insert()
-        return jsonify({
-            'success': True,
-            'movie': new_movie.format()
-        })
-    except Exception as e:
+def post_movie(jwt):
+    data = request.get_json()
+    title = data.get('title')
+    release_date = data.get('release_date')
+    if not title or not release_date:
         abort(400)
+    movie = Movie(title=title, release_date=release_date)
+    movie.insert()
+    return jsonify({"success": True, "movie": movie.format()}), 201
 
-# Route to update an existing actor
-@app.route('/actors/<int:id>', methods=['PATCH'])
-@requires_auth('patch:actors')
-def update_actor(payload, id):
-    actor = Actor.query.get(id)
-    if actor is None:
-        abort(404)
-    body = request.get_json()
-    try:
-        if 'name' in body:
-            actor.name = body['name']
-        if 'age' in body:
-            actor.age = body['age']
-        if 'gender' in body:
-            actor.gender = body['gender']
-        actor.update()
-        return jsonify({
-            'success': True,
-            'actor': actor.format()
-        })
-    except Exception as e:
-        abort(400)
 
-# Route to update an existing movie
-@app.route('/movies/<int:id>', methods=['PATCH'])
+@app.route('/movies/<int:movie_id>', methods=['PATCH'])
 @requires_auth('patch:movies')
-def update_movie(payload, id):
-    movie = Movie.query.get(id)
-    if movie is None:
+def patch_movie(jwt, movie_id):
+    data = request.get_json()
+    movie = Movie.query.get(movie_id)
+    if not movie:
         abort(404)
-    body = request.get_json()
-    try:
-        if 'title' in body:
-            movie.title = body['title']
-        if 'release_date' in body:
-            movie.release_date = body['release_date']
-        movie.update()
-        return jsonify({
-            'success': True,
-            'movie': movie.format()
-        })
-    except Exception as e:
-        abort(400)
+    movie.title = data.get('title', movie.title)
+    movie.release_date = data.get('release_date', movie.release_date)
+    movie.update()
+    return jsonify({"success": True, "movie": movie.format()}), 200
 
-# Route to delete an actor
-@app.route('/actors/<int:id>', methods=['DELETE'])
-@requires_auth('delete:actors')
-def delete_actor(payload, id):
-    actor = Actor.query.get(id)
-    if actor is None:
-        abort(404)
-    try:
-        actor.delete()
-        return jsonify({
-            'success': True,
-            'deleted': id
-        })
-    except Exception as e:
-        abort(400)
 
-# Route to delete a movie
-@app.route('/movies/<int:id>', methods=['DELETE'])
+@app.route('/movies/<int:movie_id>', methods=['DELETE'])
 @requires_auth('delete:movies')
-def delete_movie(payload, id):
-    movie = Movie.query.get(id)
-    if movie is None:
+def delete_movie(jwt, movie_id):
+    movie = Movie.query.get(movie_id)
+    if not movie:
         abort(404)
-    try:
-        movie.delete()
-        return jsonify({
-            'success': True,
-            'deleted': id
-        })
-    except Exception as e:
-        abort(400)
+    movie.delete()
+    return jsonify({"success": True, "deleted": movie_id}), 200
+
+# Error Handlers
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({"success": False, "error": 400, "message": "Bad request"}), 400
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"success": False, "error": 404, "message": "Resource not found"}), 404
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    return jsonify({"success": False, "error": 403, "message": "Permission not found"}), 403
+
+
+@app.errorhandler(AuthError)
+def auth_error(error):
+    return jsonify({"success": False, "error": error.status_code, "message": error.error['description']}), error.status_code
+
 
 if __name__ == '__main__':
     app.run(debug=True)

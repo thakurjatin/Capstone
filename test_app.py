@@ -1,11 +1,15 @@
 import unittest
-from app import app
+from flask import Flask
+from app import app, create_app
 from models import db, Movie, Actor
+import os
 
 class CastingAgencyTestCase(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.client = self.app.test_client
+        self.assistant_jwt = os.getenv('ASSISTANT_JWT', 'your_assistant_jwt_here')
+        self.producer_jwt = os.getenv('PRODUCER_JWT', 'your_producer_jwt_here')
 
     # Test getting actors
     def test_get_actors(self):
@@ -35,3 +39,18 @@ class CastingAgencyTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     # Additional tests for error handling and RBAC go here...
+     def test_get_movies_as_assistant(self):
+        """Test GET /movies with assistant role."""
+        headers = {"Authorization": f"Bearer {self.assistant_jwt}"}
+        res = self.client().get('/movies', headers=headers)
+        self.assertEqual(res.status_code, 200)
+
+    def test_post_movies_without_permission(self):
+        """Test POST /movies with insufficient permissions."""
+        headers = {"Authorization": f"Bearer {self.assistant_jwt}"}
+        payload = {"title": "New Movie"}
+        res = self.client().post('/movies', headers=headers, json=payload)
+        self.assertEqual(res.status_code, 403)
+
+if __name__ == "__main__":
+    unittest.main()
