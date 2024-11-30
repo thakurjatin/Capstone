@@ -4,9 +4,9 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
-AUTH0_DOMAIN = 'your-auth0-domain'
+AUTH0_DOMAIN = 'fsdndp.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'your-api-audience'
+API_AUDIENCE = 'https://casting-agency-api'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
