@@ -23,8 +23,11 @@ echo "Database setup completed."
 
 # Set environment variables
 echo "Setting environment variables"
-export AUTH0_DOMAIN='your-auth0-domain'
-export API_IDENTIFIER='your-api-identifier'
+export AUTH0_DOMAIN="fsdndp.us.auth0.com"
+export API_IDENTIFIER="https://casting-agency-api"
+export CLIENT_ID="cVD4RLqh0dgO8UzYvHXibFxyRPkM3hIF"
+export CLIENT_SECRET="sa2P4LoMXuqwzrV6XOBwzfZh40VHRsMnqzIh354-NGXc8IIK2KjWTof6UI-QXv9c"
+
 echo "Environment variables set."
 
 echo "Setup complete! You can now run the app with: python app.py"
