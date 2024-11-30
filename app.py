@@ -54,6 +54,10 @@ class Actor(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+@app.route('/')
+def index():
+    return jsonify({"message": "Welcome to the Casting Agency API!"})
+
 # Routes
 @app.route('/movies', methods=['GET'])
 @requires_auth('get:movies')
